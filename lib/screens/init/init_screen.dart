@@ -43,7 +43,9 @@ class _InitScreenState extends State<InitScreen> with TickerProviderStateMixin {
                   left: 20.0,
                   top: 35.0,
                 ),
-                itemBuilder: (_, __) => ToDoTileWidget(title: 'Fazer arroz'),
+                itemBuilder: (_, index) => ToDoTileWidget(
+                  title: 'Tarefa $index',
+                ),
                 separatorBuilder: (_, __) => const DottedLine(),
               ),
             ),
