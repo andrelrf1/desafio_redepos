@@ -1,3 +1,4 @@
+import 'package:desafio/core/error_catalog.dart';
 import 'package:desafio/core/http_client.dart' as client;
 import 'package:desafio/models/user.dart';
 import 'package:desafio/screens/init/init_screen.dart';
@@ -8,6 +9,7 @@ import 'package:desafio/screens/login/widgets/submit_button_widget.dart';
 import 'package:desafio/screens/signin/signin_screen.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
+import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -35,12 +37,14 @@ class _LoginScreenState extends State<LoginScreen> {
           email: _emailCtrl.text,
           password: _passwordCtrl.text,
         ));
-        if (result['success'] == false) {
+        if (!result['success']) {
           showDialog(
             context: context,
             builder: (context) => AppAlertDialog(
               alertType: AlertType.error,
-              message: 'E-mail ou senha inválidos',
+              message: ErrorCatalog.getErrorMessage(
+                result['error']['code'],
+              ),
               actions: [
                 AppAlertDialogButton(
                   onPressed: () => Navigator.pop(context),
@@ -61,12 +65,26 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         }
-      } catch (error) {
+      } on DioError catch (_) {
         showDialog(
           context: context,
           builder: (context) => AppAlertDialog(
             alertType: AlertType.error,
-            message: 'Aconteceu um erro inesperado, tente novamente!',
+            message: ErrorCatalog.getErrorMessage(1101),
+            actions: [
+              AppAlertDialogButton(
+                onPressed: () => Navigator.pop(context),
+                text: 'Fechar',
+              ),
+            ],
+          ),
+        );
+      } catch (_) {
+        showDialog(
+          context: context,
+          builder: (context) => AppAlertDialog(
+            alertType: AlertType.error,
+            message: ErrorCatalog.getErrorMessage(1102),
             actions: [
               AppAlertDialogButton(
                 onPressed: () => Navigator.pop(context),

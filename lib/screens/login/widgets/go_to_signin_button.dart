@@ -12,7 +12,10 @@ class GoToSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed,
-      child: const Text('Ainda não tem uma conta?'),
+      child: Text(
+        'Ainda não tem uma conta?',
+        style: TextStyle(color: Colors.grey[600]),
+      ),
     );
   }
 }

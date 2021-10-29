@@ -1,9 +1,11 @@
+import 'package:desafio/core/error_catalog.dart';
 import 'package:desafio/core/http_client.dart' as client;
 import 'package:desafio/models/user.dart';
 import 'package:desafio/screens/login/widgets/input_field_widget.dart';
 import 'package:desafio/screens/login/widgets/submit_button_widget.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -33,13 +35,20 @@ class _SignInScreenState extends State<SignInScreen> {
           password: _passwordCtrl.text,
           name: _nameCtrl.text,
         ));
-        print(result);
         if (!result['success']) {
+          String errorMessage;
+          if (result['error']['message'] == 'user already exists') {
+            errorMessage = ErrorCatalog.getErrorMessage(1100);
+          } else {
+            errorMessage = ErrorCatalog.getErrorMessage(
+              result['error']['code'],
+            );
+          }
           showDialog(
             context: context,
             builder: (context) => AppAlertDialog(
               alertType: AlertType.error,
-              message: 'Houve um erro inesperado ao tentar criar uma conta!',
+              message: errorMessage,
               actions: [
                 AppAlertDialogButton(
                   onPressed: () => Navigator.pop(context),
@@ -63,12 +72,26 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ).then((_) => Navigator.pop(context));
         }
-      } catch (error) {
+      } on DioError catch (_) {
         showDialog(
           context: context,
           builder: (context) => AppAlertDialog(
             alertType: AlertType.error,
-            message: 'Erro inesperado ao criar conta, tente novamente!',
+            message: ErrorCatalog.getErrorMessage(1101),
+            actions: [
+              AppAlertDialogButton(
+                onPressed: () => Navigator.pop(context),
+                text: 'Fechar',
+              ),
+            ],
+          ),
+        );
+      } catch (_) {
+        showDialog(
+          context: context,
+          builder: (context) => AppAlertDialog(
+            alertType: AlertType.error,
+            message: ErrorCatalog.getErrorMessage(1102),
             actions: [
               AppAlertDialogButton(
                 onPressed: () => Navigator.pop(context),

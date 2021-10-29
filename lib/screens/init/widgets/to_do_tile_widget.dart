@@ -1,9 +1,12 @@
+import 'package:desafio/core/error_catalog.dart';
 import 'package:desafio/core/http_client.dart' as client;
 import 'package:desafio/models/to_do.dart';
 import 'package:desafio/models/user.dart';
+import 'package:desafio/screens/login/login_screen.dart';
 import 'package:desafio/screens/to_do/to_do_screen.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
+import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -22,8 +25,6 @@ class ToDoTileWidget extends StatefulWidget {
 }
 
 class _ToDoTileWidgetState extends State<ToDoTileWidget> {
-  late bool checked;
-
   Future<void> _toggleDone() async {
     try {
       widget.toDo.done = !widget.toDo.done!;
@@ -36,10 +37,19 @@ class _ToDoTileWidgetState extends State<ToDoTileWidget> {
           context: context,
           builder: (context) => AppAlertDialog(
             alertType: AlertType.error,
-            message: 'Erro ao salvar nota, tente novamente!',
+            message: ErrorCatalog.getErrorMessage(
+              result['error']['code'],
+            ),
             actions: [
               AppAlertDialogButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => result['error']['code'] != 1012
+                    ? Navigator.pop(context)
+                    : Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      ),
                 text: 'Fechar',
               ),
             ],
@@ -48,12 +58,26 @@ class _ToDoTileWidgetState extends State<ToDoTileWidget> {
       } else {
         widget.refreshKey.currentState!.show();
       }
-    } catch (error) {
+    } on DioError catch (_) {
       showDialog(
         context: context,
         builder: (context) => AppAlertDialog(
           alertType: AlertType.error,
-          message: 'Erro inesperado, tente novamente!',
+          message: ErrorCatalog.getErrorMessage(1101),
+          actions: [
+            AppAlertDialogButton(
+              onPressed: () => Navigator.pop(context),
+              text: 'Fechar',
+            ),
+          ],
+        ),
+      );
+    } catch (_) {
+      showDialog(
+        context: context,
+        builder: (context) => AppAlertDialog(
+          alertType: AlertType.error,
+          message: ErrorCatalog.getErrorMessage(1102),
           actions: [
             AppAlertDialogButton(
               onPressed: () => Navigator.pop(context),
@@ -66,22 +90,16 @@ class _ToDoTileWidgetState extends State<ToDoTileWidget> {
   }
 
   @override
-  void initState() {
-    checked = widget.toDo.done!;
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(widget.toDo.title!),
-      leading: Checkbox(
-        shape: const CircleBorder(),
-        value: checked,
-        onChanged: (value) {
-          setState(() {
-            checked = value!;
-          });
+      leading: IconButton(
+        icon: Icon(
+          widget.toDo.done!
+              ? Icons.task_alt_rounded
+              : Icons.radio_button_unchecked_rounded,
+        ),
+        onPressed: () {
           _toggleDone();
         },
       ),

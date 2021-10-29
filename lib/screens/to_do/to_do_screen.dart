@@ -1,8 +1,11 @@
+import 'package:desafio/core/error_catalog.dart';
 import 'package:desafio/core/http_client.dart' as client;
 import 'package:desafio/models/to_do.dart';
 import 'package:desafio/models/user.dart';
+import 'package:desafio/screens/login/login_screen.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
+import 'package:dio/dio.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -57,10 +60,19 @@ class _ToDoScreenState extends State<ToDoScreen> {
           context: context,
           builder: (context) => AppAlertDialog(
             alertType: AlertType.error,
-            message: 'Erro ao salvar nota, tente novamente!',
+            message: ErrorCatalog.getErrorMessage(
+              result['error']['code'],
+            ),
             actions: [
               AppAlertDialogButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => result['error']['code'] != 1012
+                    ? Navigator.pop(context)
+                    : Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      ),
                 text: 'Fechar',
               ),
             ],
@@ -69,7 +81,7 @@ class _ToDoScreenState extends State<ToDoScreen> {
       } else {
         Navigator.pop(context, true);
       }
-    } catch (error) {
+    } on DioError catch (_) {
       setState(() {
         _saveAndDeleExit = false;
       });
@@ -77,7 +89,24 @@ class _ToDoScreenState extends State<ToDoScreen> {
         context: context,
         builder: (context) => AppAlertDialog(
           alertType: AlertType.error,
-          message: 'Erro inesperado, tente novamente!',
+          message: ErrorCatalog.getErrorMessage(1101),
+          actions: [
+            AppAlertDialogButton(
+              onPressed: () => Navigator.pop(context),
+              text: 'Fechar',
+            ),
+          ],
+        ),
+      );
+    } catch (_) {
+      setState(() {
+        _saveAndDeleExit = false;
+      });
+      showDialog(
+        context: context,
+        builder: (context) => AppAlertDialog(
+          alertType: AlertType.error,
+          message: ErrorCatalog.getErrorMessage(1102),
           actions: [
             AppAlertDialogButton(
               onPressed: () => Navigator.pop(context),
@@ -109,7 +138,9 @@ class _ToDoScreenState extends State<ToDoScreen> {
             context: context,
             builder: (context) => AppAlertDialog(
               alertType: AlertType.error,
-              message: 'Erro ao apagar tarefa, tente novamente!',
+              message: ErrorCatalog.getErrorMessage(
+                result['error']['code'],
+              ),
               actions: [
                 AppAlertDialogButton(
                   onPressed: () => Navigator.pop(context),
@@ -122,7 +153,8 @@ class _ToDoScreenState extends State<ToDoScreen> {
           Navigator.pop(context, true);
         }
       }
-    } catch (error) {
+    } on DioError catch (_) {
+    } catch (_) {
       setState(() {
         _saveAndDeleExit = true;
       });
@@ -130,7 +162,7 @@ class _ToDoScreenState extends State<ToDoScreen> {
         context: context,
         builder: (context) => AppAlertDialog(
           alertType: AlertType.error,
-          message: 'Erro inesperado, tente novamente!',
+          message: ErrorCatalog.getErrorMessage(1102),
           actions: [
             AppAlertDialogButton(
               onPressed: () => Navigator.pop(context),
@@ -212,24 +244,27 @@ class _ToDoScreenState extends State<ToDoScreen> {
                     ],
                   ),
                 ),
-                if (widget.toDo != null) PopupMenuItem(
-                  onTap: _toggleStatus,
-                  child: widget.toDo!.done! ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.close_rounded),
-                      SizedBox(width: 10),
-                      Text('Não concluída'),
-                    ],
-                  ) : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.task_alt_rounded),
-                      SizedBox(width: 10),
-                      Text('Concluída'),
-                    ],
+                if (widget.toDo != null)
+                  PopupMenuItem(
+                    onTap: _toggleStatus,
+                    child: widget.toDo!.done!
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.close_rounded),
+                              SizedBox(width: 10),
+                              Text('Não concluída'),
+                            ],
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.task_alt_rounded),
+                              SizedBox(width: 10),
+                              Text('Concluída'),
+                            ],
+                          ),
                   ),
-                ),
               ],
               icon: const Icon(Icons.more_vert_rounded),
             ),

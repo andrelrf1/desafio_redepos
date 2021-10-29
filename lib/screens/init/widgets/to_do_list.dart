@@ -26,19 +26,47 @@ class ToDoList extends StatelessWidget {
           onRefresh: () async {
             await onRefresh();
           },
-          child: ListView.separated(
-            itemCount: toDos.length,
-            padding: const EdgeInsets.only(
-              right: 20.0,
-              left: 20.0,
-              top: 35.0,
-            ),
-            itemBuilder: (_, index) => ToDoTileWidget(
-              toDo: toDos[index],
-              refreshKey: refreshKey,
-            ),
-            separatorBuilder: (_, __) => const DottedLine(),
-          ),
+          child: toDos.isNotEmpty
+              ? ListView.separated(
+                  itemCount: toDos.length,
+                  padding: const EdgeInsets.only(
+                    right: 20.0,
+                    left: 20.0,
+                    top: 35.0,
+                  ),
+                  itemBuilder: (_, index) => ToDoTileWidget(
+                    toDo: toDos[index],
+                    refreshKey: refreshKey,
+                  ),
+                  separatorBuilder: (_, __) => const DottedLine(),
+                )
+              : SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Container(
+                    height: MediaQuery.of(context).size.height - 120.0,
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long_rounded,
+                          size: 150.0,
+                          color: Colors.grey.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 10.0),
+                        Text(
+                          'Tudo quieto aqui por enquanto...',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            color: Colors.grey.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
         ),
       ),
     );

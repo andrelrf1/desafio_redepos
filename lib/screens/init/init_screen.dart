@@ -1,13 +1,16 @@
 import 'dart:ui';
+import 'package:desafio/core/error_catalog.dart';
 import 'package:desafio/core/http_client.dart' as client;
 import 'package:desafio/models/to_do.dart';
 import 'package:desafio/models/user.dart';
 import 'package:desafio/screens/init/widgets/app_bar_button.dart';
 import 'package:desafio/screens/init/widgets/to_do_list.dart';
 import 'package:desafio/screens/init/widgets/user_app_bar_widget.dart';
+import 'package:desafio/screens/login/login_screen.dart';
 import 'package:desafio/screens/to_do/to_do_screen.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog.dart';
 import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
+import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -38,10 +41,19 @@ class _InitScreenState extends State<InitScreen> {
           context: context,
           builder: (context) => AppAlertDialog(
             alertType: AlertType.error,
-            message: 'Erro ao consultar tarefas, tente novamente!',
+            message: ErrorCatalog.getErrorMessage(
+              result['error']['code'],
+            ),
             actions: [
               AppAlertDialogButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => result['error']['code'] != 1012
+                    ? Navigator.pop(context)
+                    : Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      ),
                 text: 'Fechar',
               ),
             ],
@@ -77,10 +89,21 @@ class _InitScreenState extends State<InitScreen> {
           });
         }
       }
-    } catch (error) {
+    } on DioError catch (_) {
       AppAlertDialog(
         alertType: AlertType.error,
-        message: 'Erro inesperado, tente novamente!',
+        message: ErrorCatalog.getErrorMessage(1101),
+        actions: [
+          AppAlertDialogButton(
+            onPressed: () => Navigator.pop(context),
+            text: 'Fechar',
+          ),
+        ],
+      );
+    } catch (_) {
+      AppAlertDialog(
+        alertType: AlertType.error,
+        message: ErrorCatalog.getErrorMessage(1102),
         actions: [
           AppAlertDialogButton(
             onPressed: () => Navigator.pop(context),
