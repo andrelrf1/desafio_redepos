@@ -1,5 +1,9 @@
+import 'package:desafio/core/http_client.dart' as client;
+import 'package:desafio/models/user.dart';
 import 'package:desafio/screens/login/widgets/input_field_widget.dart';
 import 'package:desafio/screens/login/widgets/submit_button_widget.dart';
+import 'package:desafio/screens/widgets/app_alert_dialog.dart';
+import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
 import 'package:flutter/material.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -15,10 +19,68 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passwordCtrl = TextEditingController();
   final TextEditingController _confirmPasswordCtrl = TextEditingController();
+  bool _enableButton = true;
 
-  void _signIn() {
+  void _signIn() async {
+    FocusScope.of(context).unfocus();
     if (_formCtrl.currentState!.validate()) {
-
+      setState(() {
+        _enableButton = false;
+      });
+      try {
+        Map<String, dynamic> result = await client.HttpClient.signIn(User(
+          email: _emailCtrl.text,
+          password: _passwordCtrl.text,
+          name: _nameCtrl.text,
+        ));
+        print(result);
+        if (!result['success']) {
+          showDialog(
+            context: context,
+            builder: (context) => AppAlertDialog(
+              alertType: AlertType.error,
+              message: 'Houve um erro inesperado ao tentar criar uma conta!',
+              actions: [
+                AppAlertDialogButton(
+                  onPressed: () => Navigator.pop(context),
+                  text: 'Fechar',
+                ),
+              ],
+            ),
+          );
+        } else {
+          showDialog(
+            context: context,
+            builder: (context) => AppAlertDialog(
+              alertType: AlertType.success,
+              message: 'Conta criada com sucesso!',
+              actions: [
+                AppAlertDialogButton(
+                  onPressed: () => Navigator.pop(context),
+                  text: 'OK',
+                ),
+              ],
+            ),
+          ).then((_) => Navigator.pop(context));
+        }
+      } catch (error) {
+        showDialog(
+          context: context,
+          builder: (context) => AppAlertDialog(
+            alertType: AlertType.error,
+            message: 'Erro inesperado ao criar conta, tente novamente!',
+            actions: [
+              AppAlertDialogButton(
+                onPressed: () => Navigator.pop(context),
+                text: 'Fechar',
+              ),
+            ],
+          ),
+        );
+      }
+      setState(() {
+        _enableButton = true;
+      });
     }
   }
 
@@ -122,7 +184,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 30.0),
                   SubmitButtonWidget(
-                    onPressed: _signIn,
+                    onPressed: _enableButton ? _signIn : null,
                     buttonName: const Text(
                       'Cadastar',
                       style: TextStyle(fontWeight: FontWeight.w600),

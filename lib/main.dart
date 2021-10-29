@@ -1,8 +1,13 @@
+import 'package:desafio/models/user.dart';
 import 'package:desafio/screens/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(Provider(
+    create: (_) => User(email: '', password: ''),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {

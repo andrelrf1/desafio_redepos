@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SubmitButtonWidget extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Text buttonName;
 
   const SubmitButtonWidget({
@@ -18,6 +18,7 @@ class SubmitButtonWidget extends StatelessWidget {
       minWidth: double.infinity,
       height: 45.0,
       color: Theme.of(context).primaryColor,
+      disabledColor: Colors.grey.withOpacity(0.1),
       child: buttonName,
     );
   }

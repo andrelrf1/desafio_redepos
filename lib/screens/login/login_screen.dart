@@ -1,9 +1,14 @@
+import 'package:desafio/core/http_client.dart' as client;
+import 'package:desafio/models/user.dart';
 import 'package:desafio/screens/init/init_screen.dart';
 import 'package:desafio/screens/login/widgets/app_title_widget.dart';
 import 'package:desafio/screens/login/widgets/go_to_signin_button.dart';
 import 'package:desafio/screens/login/widgets/input_field_widget.dart';
 import 'package:desafio/screens/login/widgets/submit_button_widget.dart';
 import 'package:desafio/screens/signin/signin_screen.dart';
+import 'package:desafio/screens/widgets/app_alert_dialog.dart';
+import 'package:desafio/screens/widgets/app_alert_dialog_button.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,19 +22,69 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formCtrl = GlobalKey<FormState>();
   final TextEditingController _emailCtrl = TextEditingController(text: '');
   final TextEditingController _passwordCtrl = TextEditingController(text: '');
+  bool _enableButtons = true;
 
-  void _login() {
+  void _login() async {
+    FocusScope.of(context).unfocus();
     if (_formCtrl.currentState!.validate()) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const InitScreen(),
-        ),
-      );
+      setState(() {
+        _enableButtons = false;
+      });
+      try {
+        Map<String, dynamic> result = await client.HttpClient.login(User(
+          email: _emailCtrl.text,
+          password: _passwordCtrl.text,
+        ));
+        if (result['success'] == false) {
+          showDialog(
+            context: context,
+            builder: (context) => AppAlertDialog(
+              alertType: AlertType.error,
+              message: 'E-mail ou senha inválidos',
+              actions: [
+                AppAlertDialogButton(
+                  onPressed: () => Navigator.pop(context),
+                  text: 'Fechar',
+                ),
+              ],
+            ),
+          );
+        } else {
+          context.read<User>().email = result['data']['email'];
+          context.read<User>().id = result['data']['id'];
+          context.read<User>().name = result['data']['name'];
+          context.read<User>().tokenJWT = result['data']['tokenJWT'];
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const InitScreen(),
+            ),
+          );
+        }
+      } catch (error) {
+        showDialog(
+          context: context,
+          builder: (context) => AppAlertDialog(
+            alertType: AlertType.error,
+            message: 'Aconteceu um erro inesperado, tente novamente!',
+            actions: [
+              AppAlertDialogButton(
+                onPressed: () => Navigator.pop(context),
+                text: 'Fechar',
+              ),
+            ],
+          ),
+        );
+      }
+      setState(() {
+        _enableButtons = true;
+      });
     }
   }
 
   void _goToSignIn() {
+    _emailCtrl.clear();
+    _passwordCtrl.clear();
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -93,14 +148,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30.0),
                   SubmitButtonWidget(
-                    onPressed: _login,
+                    onPressed: _enableButtons ? _login : null,
                     buttonName: const Text(
                       'Entrar',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                   const SizedBox(height: 10.0),
-                  GoToSignInButton(onPressed: _goToSignIn),
+                  GoToSignInButton(
+                    onPressed: _enableButtons ? _goToSignIn : null,
+                  ),
                 ],
               ),
             ),
